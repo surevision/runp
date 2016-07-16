@@ -6,6 +6,7 @@ var SpriteCharacter = SpriteBase.extend({
 	ctor : function(isPlayer, x, y) {
 		this._super("blank");
 		this.isPlayer = isPlayer;
+		this.timedOut = false; // 作为敌人时生命终止
 		this.tails = [];
 		this.tailSize = 0;
 		this.dtCount = 0.0;
@@ -15,7 +16,7 @@ var SpriteCharacter = SpriteBase.extend({
 		this.color = isPlayer ? cc.color(255,255,255, 255) : cc.color(196,0,0, 255);
 		this.node = cc.DrawNode.create();//cc.LayerColor.create();
 		this.addChild(this.node, 1000);
-		this.drawNode();
+		this.drawNode(this.node);
 	},
 	addTail : function(x, y) {
 		var tail = new SpriteBase("blank");
@@ -29,33 +30,65 @@ var SpriteCharacter = SpriteBase.extend({
 		for (i = 0; i < this.tailSize; i += 1) {
 			if (this.tails[i] == null) {
 				this.tails[i] = tail;
+				tail.i = i;
+				tail.character = this;
 				break;
 			}
 		}
 		if (i == this.tailSize) {
 			this.tails[i] = tail;
+			tail.i = i;
+			tail.character = this;
 			this.tailSize += 1;
 		}
 		var fade = cc.FadeOut.create(0.2);
 		var scale = cc.ScaleTo.create(0.2, 0, 0);
 		var spawn = cc.Spawn.create([fade, scale]);
 		var callback = cc.CallFunc.create(function(){
-			tail.removeFromParent();
-			this.tails[i] = null;
-		}, this);
+			this.removeFromParent();
+			this.character.tails[this.i] = null;
+		}, tail);
 		var sequence = cc.Sequence.create([spawn, callback]);
 		tail.runAction(sequence);
 	},
-	drawNode : function() {
-		this.node.ignoreAnchorPointForPosition(false);
-		this.node.setAnchorPoint(0.5, 0.5);
-		this.node.drawDot(cc.p(0, 0), R, this.color);
+	drawNode : function(node) {
+		node.ignoreAnchorPointForPosition(false);
+		node.setAnchorPoint(0.5, 0.5);
+		node.drawDot(cc.p(0, 0), R, this.color);
 	},
 	drawTail : function(tail) {
 		tail.node.ignoreAnchorPointForPosition(false);
 		tail.setCascadeOpacityEnabled(true);
 		tail.node.setAnchorPoint(0.5, 0.5);
 		tail.node.drawDot(cc.p(0, 0), R, this.color);
+	},
+	timeOut : function() {
+		this.stopAllActions();
+		var fadeOut = cc.FadeOut.create(1);
+		var callback = cc.CallFunc.create(function() {
+			this.timedOut = true;
+		}, this);
+		this.runAction(cc.Sequence.create([fadeOut, callback]));
+	},
+	die : function() {
+		this.node.setVisible(false);
+		for (var i = 0; i < 4; i += 1) {
+			var temp = new SpriteBase("blank");
+			var drawNode = cc.DrawNode.create()
+			temp.addChild(drawNode);
+			temp.setCascadeOpacityEnabled(true);
+			temp.node = drawNode;
+			this.getParent().addChild(temp, 100);
+			temp.setPosition(this.getPosition());
+			this.drawNode(temp.node);
+			var fade = cc.FadeOut.create(1);
+			var mx = [300, 300, -300, -300][i];
+			var my = [300, -300, 300, -300][i];
+			var moveBy = cc.MoveBy.create(1, cc.p(mx, my));
+			var spawn = cc.Spawn.create([fade, moveBy]);
+			temp.runAction(spawn);
+		}
+
 	},
 	hitRect : function(rect) {
 		x = this.getPositionX();
@@ -88,7 +121,7 @@ var SpriteCharacter = SpriteBase.extend({
 	dispose : function() {
 		this._super();
 		for (var i = 0; i < this.tailSize; i += 1) {
-			if (this.tails[i] == null) {
+			if (this.tails[i] != null) {
 				this.tails[i].removeFromParent();
 				break;
 			}
