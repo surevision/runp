@@ -1,8 +1,7 @@
 var res = {
 	pics : [	// 图片
 		//"res/back.png", // 背景
-		"res/blank.png",	// 空图片
-		"res/HelloWorld.png"
+		"res/blank.png"	// 空图
 	],
 	audios : [	// 音乐
 		//"res/clock",	// 倒计时时钟

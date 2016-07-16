@@ -148,7 +148,7 @@ var SceneMap = SceneBase.extend({
 				this.enemieSize += 1;
 			}
 			// 延时死亡
-			var delay = cc.DelayTime.create(3);
+			var delay = cc.DelayTime.create(1.5);
 			var callback = cc.CallFunc.create(function() {
 				this.timeOut();
 			}, sprite);
@@ -164,7 +164,7 @@ var SceneMap = SceneBase.extend({
 				var dy = posE.y - posP.y;
 				var sx = 0;
 				var sy = 0;
-				if (dx != 0) {
+				if (dx != 0 && dy != 0) {
 					var k = dy / dx;
 					sx = Math.abs(SX * MUL * Math.cos(Math.atan(k)));
 					sy = Math.abs(SY * MUL * Math.sin(Math.atan(k)));
