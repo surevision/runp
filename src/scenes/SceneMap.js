@@ -125,11 +125,12 @@ var SceneMap = SceneBase.extend({
 		if (this.frameCnt % 180 == 0) {
 			var size = cc.director.getWinSize();
 			// 生成敌人
+			var offset = 12;
 			var postions = [
-				[0, 0],
-				[0, size.height],
-				[size.width, 0],
-				[size.width, size.height]
+				[-offset, -offset],
+				[-offset, size.height+offset],
+				[size.width+offset, -offset],
+				[size.width+offset, size.height+offset]
 			];
 			var pos = postions[parseInt(Math.random() * 4)]
 			var sprite = new SpriteCharacter(false, pos[0], pos[1]);
