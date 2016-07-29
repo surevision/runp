@@ -13,6 +13,9 @@ var SceneMap = SceneBase.extend({
 		this.gameoverFlag = false;
 		this.started = false;
 		this.frameCnt = 0;	// 帧计数
+		this.lastScorePos = -1;
+		this.currScore = 0; // 当前分数
+		this.highestScore = this.highestScore || 0;	// 最高分
 	},
 	start : function() {
 		this._super();
@@ -22,6 +25,9 @@ var SceneMap = SceneBase.extend({
 		this.titleLabel.setAnchorPoint(0.5, 0.5);
 		this.titleLabel.setPosition(size.width / 2, size.height / 2);
 		this.addChild(this.titleLabel, 999);
+		this.scoreLabel = cc.LabelTTF.create("", "Arial", 24);
+		this.scoreLabel.setVisible(false);
+		this.addChild(this.scoreLabel, 998);
 		cc.eventManager.addListener({
 			event : cc.EventListener.TOUCH_ONE_BY_ONE,
 			onTouchBegan : this.onTouchTitle.bind(this)
@@ -116,6 +122,13 @@ var SceneMap = SceneBase.extend({
 			this.playerSprite.hitRect(this.wallY2.getBoundingBox())) {
 				this.playerSprite.die();
 				this.gameOverPhase();
+		}
+		// 得分判定
+		if (this.playerSprite.hitRect(this.scoreRect.getBoundingBox())) {
+			this.currScore += 1;
+			this.highestScore = MAX(this.currScore, this.highestScore);
+			this.randomScoreRect();
+			this.refreshScore();
 		}
 	},
 	/**
@@ -270,6 +283,41 @@ var SceneMap = SceneBase.extend({
 			cc.MoveTo.create(4, cc.p(wallY2.getPositionX(), size.height)),
 			cc.MoveTo.create(4, cc.p(wallY2.getPositionX(), 0))
 		])));
+		// 计分点
+		if (this.scoreRect) {
+			this.scoreRect.removeFromParent();
+		}
+		this.scoreRect = cc.LayerColor.create();
+		this.scoreRect.setAnchorPoint(0.5, 0.5);
+		this.scoreRect.ignoreAnchorPointForPosition(false);
+		this.scoreRect.setColor(cc.color(255,255,255));
+		this.scoreRect.setContentSize(cc.size(8, 8));
+		this.scoreRect.setVisible(false);
+		this.addChild(this.scoreRect, 2);
+		this.randomScoreRect();
+		this.refreshScore();
+	},
+	refreshScore : function() {
+		var size = cc.director.getWinSize();
+		this.scoreLabel.setVisible(true);
+		this.scoreLabel.ignoreAnchorPointForPosition(false);
+		this.scoreLabel.setAnchorPoint(0.5, 0.5);
+		this.scoreLabel.setPosition(size.width / 2, size.height / 4 * 3);
+		this.scoreLabel.setString(""+this.currScore);
+	},
+	randomScoreRect : function() {
+		var size = cc.director.getWinSize();
+		var Pos = [
+			[size.width / 2, size.height / 4 * 3 + 16],
+			[size.width / 2, size.height / 4 - 16],
+			[size.width / 4 * 3, size.height / 2],
+			[size.width / 4, size.height / 2]
+		];
+		this.lastScorePos = RandomExcept([0, 1, 2, 3], this.lastScorePos);
+		var pos = Pos[this.lastScorePos];
+		this.scoreRect.setPosition(pos[0], pos[1]);
+		console.log(pos);
+		this.scoreRect.setVisible(true);
 	},
 	winGamePhase : function() {
 		this.started = false;
